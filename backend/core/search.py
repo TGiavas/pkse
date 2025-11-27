@@ -3,15 +3,14 @@ from django.conf import settings
 from whoosh.index import create_in, open_dir, exists_in
 from whoosh.fields import Schema, TEXT, ID, STORED
 from whoosh.qparser import QueryParser
+from .utils import extract_text_from_file  # <--- Import this
 
-# Define the schema
-# path is stored so we can retrieve the file later
-# content is indexed but not stored (to save space, we have the file)
+# ... (Schema and get_index remain the same) ...
 SCHEMA = Schema(
     id=ID(stored=True, unique=True),
     path=STORED(),
     title=TEXT(stored=True),
-    content=TEXT()
+    content=TEXT(stored=True)
 )
 
 INDEX_DIR = os.path.join(settings.BASE_DIR, 'search_index')
@@ -26,16 +25,18 @@ def get_index():
 
 def index_file(file_obj):
     """
-    Index a File model instance.
-    For now, we just index the name as content. 
-    Later we will extract real content.
+    Index a File model instance with actual content extraction.
     """
     ix = get_index()
     writer = ix.writer()
     
-    # TODO: Extract actual text content from file_obj.path
-    content = f"{file_obj.name} (Content extraction pending)"
+    # Extract real content
+    content = extract_text_from_file(file_obj.path)
     
+    # If no content extracted, fallback to name
+    if not content.strip():
+        content = file_obj.name
+
     writer.update_document(
         id=str(file_obj.id),
         path=file_obj.path,
