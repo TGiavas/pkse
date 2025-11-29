@@ -34,3 +34,24 @@ export const uploadFile = async (file: File) => {
     });
     return response.data;
 };
+
+export const openFile = async (path: string) => {
+    const response = await api.post('/open/', { path });
+    return response.data;
+};
+
+export interface IngestResponse {
+    status: string;
+    count: number;
+    errors: string[];
+}
+
+export const ingestFiles = async (path: string) => {
+    const response = await api.post<IngestResponse>('/ingest/', { path });
+    return response.data;
+};
+
+export const pickDirectory = async () => {
+    const response = await api.post<{ path: string | null }>('/pick-directory/');
+    return response.data;
+};
